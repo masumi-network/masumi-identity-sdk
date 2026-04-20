@@ -24,29 +24,33 @@ The SDK repo ships with a template agent under [`examples/template-agent`](https
 ## Run it
 
 <Tabs>
-  <Tab title="From the monorepo">
-    ```bash
-    git clone https://github.com/masumi-network/masumi-identity-sdk.git
-    cd masumi-identity-sdk
-    pnpm install
-    pnpm --filter @masumi_network/identity-sdk-template-agent start
-    ```
-  </Tab>
-  <Tab title="As a fresh project">
-    ```bash
-    mkdir my-agent && cd my-agent
-    pnpm init
-    pnpm add @masumi_network/identity-sdk
-    pnpm add -D tsx
-    # Paste the source below into src/index.ts
-    pnpm tsx src/index.ts
-    ```
-  </Tab>
+<TabItem value="monorepo" label="From the monorepo">
+
+```bash
+git clone https://github.com/masumi-network/masumi-identity-sdk.git
+cd masumi-identity-sdk
+pnpm install
+pnpm --filter @masumi_network/identity-sdk-template-agent start
+```
+
+</TabItem>
+<TabItem value="fresh" label="As a fresh project">
+
+```bash
+mkdir my-agent && cd my-agent
+pnpm init
+pnpm add @masumi_network/identity-sdk
+pnpm add -D tsx
+# Paste the source below into src/index.ts
+pnpm tsx src/index.ts
+```
+
+</TabItem>
 </Tabs>
 
 ## Source
 
-```ts src/index.ts
+```ts title="src/index.ts"
 import {
   MASUMI_IDENTITY_ENDPOINTS,
   MasumiIdentity,

@@ -19,7 +19,7 @@ Under the hood it talks to the Masumi credential infrastructure (a KERI credenti
 ## Links
 
 - **Package:** [npm · @masumi_network/identity-sdk](https://www.npmjs.com/package/@masumi_network/identity-sdk)
-- **Docs:** see [`docs/`](./docs) — API reference, tutorials, onboarding guide
+- **Docs:** [masumi-network.github.io/masumi-identity-sdk](https://masumi-network.github.io/masumi-identity-sdk/) — API reference, tutorials, onboarding guide
 - **Template agent:** [`examples/template-agent/`](./examples/template-agent)
 
 ## Install
@@ -53,7 +53,7 @@ await identity.issueCredential({
 const ok = await identity.verifyAidSignature({ aid, message, signature });
 ```
 
-See the [full documentation](./docs) for tutorials on agent linking, A2A verification, and every method on the client.
+See the [full documentation](https://masumi-network.github.io/masumi-identity-sdk/) for tutorials on agent linking, A2A verification, and every method on the client.
 
 ## Monorepo layout
 
@@ -63,7 +63,7 @@ masumi-identity-sdk/
 │   └── sdk/                 @masumi_network/identity-sdk (the published package)
 ├── examples/
 │   └── template-agent/      Runnable reference implementation
-├── docs/                    Mintlify documentation site
+├── docs/                    Docusaurus documentation site (GitHub Pages)
 └── .github/workflows/       CI + automated npm releases
 ```
 
@@ -77,8 +77,8 @@ pnpm test
 # Run the template agent against live Masumi infrastructure
 pnpm --filter @masumi_network/identity-sdk-template-agent start
 
-# Preview the docs site locally
-cd docs && npx mintlify dev
+# Preview the docs site locally (requires Node 20+ inside docs/)
+cd docs && npm install && npm start
 ```
 
 ## Roadmap

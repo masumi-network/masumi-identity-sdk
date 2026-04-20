@@ -5,19 +5,29 @@ description: "From zero to a live SDK call hitting Masumi production infrastruct
 
 ## 1. Install
 
-<CodeGroup>
-```bash pnpm
+<Tabs>
+<TabItem value="pnpm" label="pnpm">
+
+```bash
 pnpm add @masumi_network/identity-sdk
 ```
 
-```bash npm
+</TabItem>
+<TabItem value="npm" label="npm">
+
+```bash
 npm install @masumi_network/identity-sdk
 ```
 
-```bash yarn
+</TabItem>
+<TabItem value="yarn" label="yarn">
+
+```bash
 yarn add @masumi_network/identity-sdk
 ```
-</CodeGroup>
+
+</TabItem>
+</Tabs>
 
 <Note>
 The SDK requires **Node.js 18+** (for global `fetch`). It ships both ESM and CJS builds and works in Next.js server runtimes, Edge runtimes, and plain Node scripts.
@@ -63,7 +73,7 @@ If you see an OOBI URL, you're done — the SDK is talking to live Masumi infras
 
 Copy this into a fresh file, for example `try-masumi.ts`:
 
-```ts try-masumi.ts
+```ts title="try-masumi.ts"
 import {
   MASUMI_IDENTITY_ENDPOINTS,
   MasumiIdentity,
@@ -106,15 +116,22 @@ main().catch(console.error);
 
 Run it:
 
-<CodeGroup>
-```bash pnpm
+<Tabs>
+<TabItem value="pnpm" label="pnpm">
+
+```bash
 pnpm dlx tsx try-masumi.ts
 ```
 
-```bash npm
+</TabItem>
+<TabItem value="npm" label="npm">
+
+```bash
 npx tsx try-masumi.ts
 ```
-</CodeGroup>
+
+</TabItem>
+</Tabs>
 
 Expected output:
 

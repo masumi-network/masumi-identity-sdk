@@ -37,8 +37,10 @@ new MasumiIdentity(config: MasumiIdentityConfig)
 
 ### Example
 
-<CodeGroup>
-```ts Canonical production
+<Tabs>
+<TabItem value="canonical" label="Canonical production">
+
+```ts
 import {
   MasumiIdentity,
   MASUMI_IDENTITY_ENDPOINTS,
@@ -47,7 +49,10 @@ import {
 const identity = new MasumiIdentity(MASUMI_IDENTITY_ENDPOINTS.production);
 ```
 
-```ts Explicit URLs
+</TabItem>
+<TabItem value="explicit" label="Explicit URLs">
+
+```ts
 import { MasumiIdentity } from "@masumi_network/identity-sdk";
 
 const identity = new MasumiIdentity({
@@ -56,7 +61,10 @@ const identity = new MasumiIdentity({
 });
 ```
 
-```ts Self-hosted / staging
+</TabItem>
+<TabItem value="self-hosted" label="Self-hosted / staging">
+
+```ts
 import { MasumiIdentity } from "@masumi_network/identity-sdk";
 
 const identity = new MasumiIdentity({
@@ -65,7 +73,10 @@ const identity = new MasumiIdentity({
 });
 ```
 
-```ts With custom fetch
+</TabItem>
+<TabItem value="custom-fetch" label="Custom fetch">
+
+```ts
 import { MasumiIdentity } from "@masumi_network/identity-sdk";
 
 const tracedFetch: typeof fetch = async (input, init) => {
@@ -79,7 +90,9 @@ const identity = new MasumiIdentity({
   fetch: tracedFetch,
 });
 ```
-</CodeGroup>
+
+</TabItem>
+</Tabs>
 
 ## Instance methods
 
