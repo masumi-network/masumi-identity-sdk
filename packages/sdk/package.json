@@ -1,0 +1,69 @@
+{
+  "name": "@masumi_network/identity-sdk",
+  "version": "0.0.0",
+  "description": "TypeScript SDK for Masumi Identity — link agents to DIDs, request and verify Verifiable Credentials in agent-to-agent interactions.",
+  "keywords": [
+    "masumi",
+    "identity",
+    "did",
+    "keri",
+    "acdc",
+    "verifiable-credentials",
+    "agent",
+    "a2a",
+    "cardano"
+  ],
+  "license": "MIT",
+  "author": "Masumi Network",
+  "homepage": "https://github.com/masumi-network/masumi-identity-sdk#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/masumi-network/masumi-identity-sdk.git",
+    "directory": "packages/sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/masumi-network/masumi-identity-sdk/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run --project unit",
+    "test:watch": "vitest --project unit",
+    "test:integration": "vitest run --project integration",
+    "test:all": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src tests",
+    "lint:fix": "eslint src tests --fix",
+    "prepublishOnly": "pnpm build"
+  },
+  "dependencies": {
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "22.12.0",
+    "tsup": "8.5.0",
+    "vitest": "3.2.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
