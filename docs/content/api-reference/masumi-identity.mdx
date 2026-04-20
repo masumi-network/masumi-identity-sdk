@@ -1,0 +1,126 @@
+---
+title: MasumiIdentity
+description: "The single entry-point class for the SDK. Instantiate once per environment and reuse."
+---
+
+`MasumiIdentity` is the high-level client that wraps the Masumi credential server and KERIA into a small, typed, idiomatic surface.
+
+## Import
+
+```ts
+import { MasumiIdentity } from "@masumi_network/identity-sdk";
+```
+
+## Constructor
+
+```ts
+new MasumiIdentity(config: MasumiIdentityConfig)
+```
+
+### `config: MasumiIdentityConfig`
+
+<ParamField body="credentialServerUrl" type="string" required>
+  Base URL of the Masumi KERI credential server. Production:
+  `https://cred-issuance.masumi-identity.xyz`.
+</ParamField>
+
+<ParamField body="keriaUrl" type="string" required>
+  Base URL of the KERIA agent. Production: `https://keria.masumi-identity.xyz`.
+  Required for signature-verification flows; supply a placeholder if your
+  integration never calls `verifyAidSignature` / `fetchKeyState`.
+</ParamField>
+
+<ParamField body="fetch" type="typeof fetch">
+  Optional custom `fetch` implementation (useful for testing, tracing, or
+  non-Node runtimes). Defaults to the global `fetch`.
+</ParamField>
+
+### Example
+
+<Tabs>
+<TabItem value="canonical" label="Canonical production">
+
+```ts
+import {
+  MasumiIdentity,
+  MASUMI_IDENTITY_ENDPOINTS,
+} from "@masumi_network/identity-sdk";
+
+const identity = new MasumiIdentity(MASUMI_IDENTITY_ENDPOINTS.production);
+```
+
+</TabItem>
+<TabItem value="explicit" label="Explicit URLs">
+
+```ts
+import { MasumiIdentity } from "@masumi_network/identity-sdk";
+
+const identity = new MasumiIdentity({
+  credentialServerUrl: "https://cred-issuance.masumi-identity.xyz",
+  keriaUrl: "https://keria.masumi-identity.xyz",
+});
+```
+
+</TabItem>
+<TabItem value="self-hosted" label="Self-hosted / staging">
+
+```ts
+import { MasumiIdentity } from "@masumi_network/identity-sdk";
+
+const identity = new MasumiIdentity({
+  credentialServerUrl: process.env.CRED_URL!,
+  keriaUrl: process.env.KERIA_URL!,
+});
+```
+
+</TabItem>
+<TabItem value="custom-fetch" label="Custom fetch">
+
+```ts
+import { MasumiIdentity } from "@masumi_network/identity-sdk";
+
+const tracedFetch: typeof fetch = async (input, init) => {
+  console.log("[SDK]", input);
+  return fetch(input, init);
+};
+
+const identity = new MasumiIdentity({
+  credentialServerUrl: "...",
+  keriaUrl: "...",
+  fetch: tracedFetch,
+});
+```
+
+</TabItem>
+</Tabs>
+
+## Instance methods
+
+### Agent ↔ AID linking
+
+| Method | Signature | Network |
+|--------|-----------|---------|
+| [`getIssuerOobi`](/api-reference/agent-linking#getissueroobi) | `() => Promise<string>` | Yes |
+| [`connectToAid`](/api-reference/agent-linking#connecttoaid) | `(oobi: string) => Promise<{ success: boolean; data: string }>` | Yes |
+| [`isAidConnected`](/api-reference/agent-linking#isaidconnected) | `(aid: string) => Promise<boolean>` | Yes |
+
+### Verifiable Credentials
+
+| Method | Signature | Network |
+|--------|-----------|---------|
+| [`issueCredential`](/api-reference/credentials#issuecredential) | `(params: IssueCredentialParams) => Promise<{ success: boolean; data: string }>` | Yes |
+| [`getCredentialsForAid`](/api-reference/credentials#getcredentialsforaid) | `(aid: string) => Promise<Credential[]>` | Yes |
+| [`validateCredential`](/api-reference/credentials#validatecredential) | `(cred, options?) => CredentialValidationResult` | **No** |
+| [`formatCredential`](/api-reference/credentials#formatcredential) | `(cred) => FormattedCredential` | **No** |
+| [`findCredentialBySchema`](/api-reference/credentials#findcredentialbyschema) | `(creds, schemaSaid) => Credential \| undefined` | **No** |
+
+### KERI signature verification
+
+| Method | Signature | Network |
+|--------|-----------|---------|
+| [`verifyAidSignature`](/api-reference/signature-verification#verifyaidsignature) | `(params: VerifyAidSignatureParams) => Promise<boolean>` | Yes |
+| [`fetchKeyState`](/api-reference/signature-verification#fetchkeystate) | `(aid: string) => Promise<AidKeyState>` | Yes |
+
+## Lifecycle
+
+The client is safe to instantiate once per process and reuse. It holds no mutable state, only the configured base URLs and `fetch` implementation. There is no `close()` or `dispose()` — the underlying `fetch` connections are managed by the runtime.

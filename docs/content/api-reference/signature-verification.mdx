@@ -1,0 +1,93 @@
+---
+title: Signature verification
+description: "Prove an AID owns the signature it claims during A2A interactions."
+---
+
+These methods hit KERIA to resolve the current key state for an AID and validate Ed25519 signatures against it. They're the cryptographic primitive behind the "is this really Agent X?" question.
+
+## `verifyAidSignature`
+
+Verify that a given AID signed a given message. Internally fetches the AID's latest key state from KERIA and validates the Ed25519 signature.
+
+```ts
+verifyAidSignature(params: VerifyAidSignatureParams): Promise<boolean>
+```
+
+### Parameters
+
+<ParamField path="params.aid" type="string" required>
+  The AID that allegedly signed the message.
+</ParamField>
+
+<ParamField path="params.message" type="string" required>
+  The exact plaintext that was signed. Must be byte-identical to what the
+  signer signed — no whitespace, casing, or encoding differences.
+</ParamField>
+
+<ParamField path="params.signature" type="string" required>
+  Base64url-encoded Ed25519 signature.
+</ParamField>
+
+### Returns
+
+`true` if the signature is valid for the AID's current key state. `false` otherwise — either the signature is bad, the message is tampered, or the AID's keys have rotated past the signer.
+
+<Warning>
+This method hits KERIA on every call. For high-throughput verification, cache
+the key state via [`fetchKeyState`](#fetchkeystate) and verify in-process.
+</Warning>
+
+### Example
+
+```ts
+const ok = await identity.verifyAidSignature({
+  aid: "EHpH79tPZoSl7VJZ7xMi3JWF4rH9wZ2ntGvKABd9N14z",
+  message: "Proof-of-possession-nonce-abc123",
+  signature: "AAB6f_7X...base64url",
+});
+
+if (!ok) {
+  throw new Error("Signature did not match the AID's current key state");
+}
+```
+
+### Typical A2A flow
+
+<Steps>
+  <Step title="Agent B issues a nonce">
+    Agent B generates a fresh random nonce and sends it to Agent A.
+  </Step>
+  <Step title="Agent A signs it">
+    Agent A's wallet signs the nonce with its AID's private key and sends back
+    `{ aid, signature }`.
+  </Step>
+  <Step title="Agent B verifies">
+    Agent B calls `verifyAidSignature({ aid, message: nonce, signature })`.
+    If it returns `true`, Agent A provably controls the AID *right now*.
+  </Step>
+</Steps>
+
+---
+
+## `fetchKeyState`
+
+Fetch current key state for an AID directly from KERIA. Use this when you want to verify multiple signatures against the same AID without repeating network calls, or when you need access to key material for a custom verification flow.
+
+```ts
+fetchKeyState(aid: string): Promise<AidKeyState>
+```
+
+### Returns
+
+An [`AidKeyState`](/api-reference/types#aidkeystate) whose `k` field holds the current active public key (base64url-encoded Ed25519).
+
+### Example
+
+```ts
+const keyState = await identity.fetchKeyState(aid);
+console.log("Current active key:", keyState.k);
+```
+
+<Note>
+Multi-sig AIDs expose multiple keys; this SDK currently surfaces only the first one.
+</Note>

@@ -1,0 +1,74 @@
+---
+title: Introduction
+description: "Add trusted, verifiable identity to AI agents in minutes."
+---
+
+The **Masumi Identity SDK** gives AI agents a portable, cryptographically verifiable identity. Agents link to a KERI Autonomous Identifier (AID), receive Verifiable Credentials (VCs), and prove who they are to other agents during A2A interactions — without the developer ever having to touch ACDC payloads, SAIDs, OOBIs, or Ed25519 signatures directly.
+
+## What you can do with it
+
+<CardGroup cols={2}>
+  <Card title="Link an agent to an identity" icon="link" href="/tutorials/link-agent-to-aid">
+    Bind any Masumi agent to a KERI AID backed by a Veridian wallet, so its identity is decentralized and user-owned.
+  </Card>
+  <Card title="Issue & hold Verifiable Credentials" icon="id-card" href="/api-reference/credentials">
+    Issue ACDC credentials to an AID, fetch credentials an AID already holds, and validate issuance / revocation / expiration.
+  </Card>
+  <Card title="Verify signatures in A2A" icon="shield-check" href="/tutorials/verify-vc-a2a">
+    Prove another agent owns the AID it claims before trusting a message, payment, or credential presentation.
+  </Card>
+  <Card title="Point at any KERI infrastructure" icon="server" href="/api-reference/constants">
+    Ships with canonical Masumi endpoints baked in, but every URL is overridable for staging or self-hosted deployments.
+  </Card>
+</CardGroup>
+
+## Why it exists
+
+Identity in multi-agent systems is hard. Without it, agents can't trust messages, payments, or credentials from other agents — there's no way to tell who is actually on the other end of a conversation.
+
+KERI (Key Event Receipt Infrastructure) and ACDC (Authentic Chained Data Containers) solve that, but they're standards-heavy and normally require deep cryptographic expertise to integrate.
+
+This SDK wraps the already-running Masumi credential infrastructure into a small, typed, batteries-included surface:
+
+- **One class**, `MasumiIdentity`, with 10 methods covering the full lifecycle
+- **Full TypeScript types** for every parameter, return, and credential shape
+- **Pure utility functions** for validation, formatting, and lookup — no network calls
+- **ESM + CJS** builds that work in Node 18+, Next.js, Edge runtimes, and bundlers
+- **Zero config** for production — built-in canonical Masumi URLs
+
+## How the pieces fit together
+
+```
+┌──────────────┐   OOBI handshake   ┌──────────────────────┐
+│              │ ─────────────────▶ │                      │
+│  Your agent  │                    │  Masumi credential   │
+│  (this SDK)  │ ◀───────────────── │  server + KERIA      │
+│              │   issued VCs       │  (Masumi identity    │
+└──────┬───────┘                    │   infrastructure)    │
+       │                            └──────────────────────┘
+       │ signs + presents VC
+       ▼
+┌──────────────┐
+│              │  verifyAidSignature + validateCredential
+│ Another      │ ─────────────────────────────────▶ ✓ or ✗
+│ agent        │
+└──────────────┘
+```
+
+Under the hood, the SDK talks to two services:
+
+- **Credential server** — issues and manages ACDC credentials, resolves OOBIs, tracks revocation.
+- **KERIA** — KERI Agent HTTP interface. Resolves the current public key for any AID so signatures can be verified against live key state.
+
+Both are publicly hosted by the Masumi network and are the same services that power the [Masumi SaaS](https://saas.masumi.network) and the [Masumi Veridian Wallet](https://github.com/masumi-network/masumi-veridian-wallet).
+
+## What's next
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="bolt" href="/quickstart">
+    Install the SDK and make your first live call in under five minutes.
+  </Card>
+  <Card title="Core concepts" icon="book" href="/concepts">
+    Five-minute primer on AIDs, OOBIs, ACDCs, VCs, and the A2A model.
+  </Card>
+</CardGroup>

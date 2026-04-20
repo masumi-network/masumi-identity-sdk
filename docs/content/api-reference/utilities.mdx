@@ -1,0 +1,124 @@
+---
+title: Utilities
+description: "Pure helper functions for working with credentials — no network, no client needed."
+---
+
+These utilities are exported as standalone functions for consumers that want to work with credentials without instantiating a client — e.g. on a credential payload received from an external source, in unit tests, or inside React components.
+
+All four are also available as methods on [`MasumiIdentity`](/api-reference/masumi-identity) (except `extractCredentialAttributes`, which is only standalone).
+
+## Import
+
+```ts
+import {
+  extractCredentialAttributes,
+  findCredentialBySchema,
+  formatCredential,
+  validateCredential,
+} from "@masumi_network/identity-sdk";
+```
+
+---
+
+## `extractCredentialAttributes`
+
+Pull user-supplied attributes out of a credential's `sad.a` block, filtering out ACDC metadata fields (`d`, `i`, `dt`, `ri`, `s`).
+
+```ts
+extractCredentialAttributes(credential: Credential): Record<string, unknown>
+```
+
+### Example
+
+```ts
+import { extractCredentialAttributes } from "@masumi_network/identity-sdk";
+
+const attrs = extractCredentialAttributes(cred);
+
+console.log(attrs);
+// {
+//   agentId: "agent-42",
+//   name: "Trip Planner",
+//   // ...everything from sad.a except ACDC metadata
+// }
+```
+
+---
+
+## `validateCredential`
+
+Pure validation of a credential's issuance status, revocation state, and expiration. Identical to the instance method of the same name on `MasumiIdentity`.
+
+```ts
+validateCredential(
+  credential: Credential,
+  options?: CredentialValidationOptions,
+): CredentialValidationResult
+```
+
+<Note>
+`expirationDays` defaults to **365**. Override with `{ expirationDays: 90 }` for shorter-lived credentials.
+</Note>
+
+### Example
+
+```ts
+import { validateCredential } from "@masumi_network/identity-sdk";
+
+const { isValid, status, message } = validateCredential(cred);
+
+if (!isValid) {
+  console.warn(`Reject: ${status} — ${message}`);
+}
+```
+
+---
+
+## `formatCredential`
+
+Project a raw [`Credential`](/api-reference/types#credential) into a structured, display-friendly [`FormattedCredential`](/api-reference/types#formattedcredential).
+
+```ts
+formatCredential(credential: Credential): FormattedCredential
+```
+
+### Example
+
+```ts
+import { formatCredential } from "@masumi_network/identity-sdk";
+
+const view = formatCredential(cred);
+
+return (
+  <dl>
+    <dt>Type</dt>   <dd>{view.credentialType}</dd>
+    <dt>Holder</dt> <dd>{view.issueeAid}</dd>
+    <dt>Status</dt> <dd>{view.status}</dd>
+    <dt>Issued</dt> <dd>{view.issuanceDateTime}</dd>
+  </dl>
+);
+```
+
+---
+
+## `findCredentialBySchema`
+
+Return the first credential in an array whose schema SAID matches.
+
+```ts
+findCredentialBySchema(
+  credentials: readonly Credential[],
+  schemaSaid: string,
+): Credential | undefined
+```
+
+### Example
+
+```ts
+import { findCredentialBySchema } from "@masumi_network/identity-sdk";
+
+const agentVerification = findCredentialBySchema(
+  creds,
+  "EJ1gXWfzLyW2u0-YY5Z...", // Agent Verification schema
+);
+```

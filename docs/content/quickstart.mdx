@@ -1,0 +1,158 @@
+---
+title: Quickstart
+description: "From zero to a live SDK call hitting Masumi production infrastructure in under five minutes."
+---
+
+## 1. Install
+
+<Tabs>
+<TabItem value="pnpm" label="pnpm">
+
+```bash
+pnpm add @masumi_network/identity-sdk
+```
+
+</TabItem>
+<TabItem value="npm" label="npm">
+
+```bash
+npm install @masumi_network/identity-sdk
+```
+
+</TabItem>
+<TabItem value="yarn" label="yarn">
+
+```bash
+yarn add @masumi_network/identity-sdk
+```
+
+</TabItem>
+</Tabs>
+
+<Note>
+The SDK requires **Node.js 18+** (for global `fetch`). It ships both ESM and CJS builds and works in Next.js server runtimes, Edge runtimes, and plain Node scripts.
+</Note>
+
+## 2. Construct the client
+
+Point the client at the canonical Masumi production endpoints with a single import:
+
+```ts
+import {
+  MasumiIdentity,
+  MASUMI_IDENTITY_ENDPOINTS,
+} from "@masumi_network/identity-sdk";
+
+const identity = new MasumiIdentity(MASUMI_IDENTITY_ENDPOINTS.production);
+```
+
+That's equivalent to:
+
+```ts
+const identity = new MasumiIdentity({
+  credentialServerUrl: "https://cred-issuance.masumi-identity.xyz",
+  keriaUrl: "https://keria.masumi-identity.xyz",
+});
+```
+
+For staging or self-hosted deployments, pass your own URLs — see [Constants](/api-reference/constants) for the recommended pattern.
+
+## 3. Make your first live call
+
+Fetch the issuer's OOBI from the production credential server:
+
+```ts
+const issuerOobi = await identity.getIssuerOobi();
+console.log(issuerOobi);
+// → "https://cred-issuance.masumi-identity.xyz/oobi/ENd...."
+```
+
+If you see an OOBI URL, you're done — the SDK is talking to live Masumi infrastructure.
+
+## 4. Full runnable script
+
+Copy this into a fresh file, for example `try-masumi.ts`:
+
+```ts title="try-masumi.ts"
+import {
+  MASUMI_IDENTITY_ENDPOINTS,
+  MasumiIdentity,
+  validateCredential,
+} from "@masumi_network/identity-sdk";
+
+async function main() {
+  const identity = new MasumiIdentity(MASUMI_IDENTITY_ENDPOINTS.production);
+
+  // (1) Network call: fetch the issuer's OOBI.
+  const issuerOobi = await identity.getIssuerOobi();
+  console.log("Issuer OOBI:", issuerOobi);
+
+  // (2) Pure: validate a mock credential without hitting the network.
+  const mockCredential = {
+    sad: {
+      d: "EHrP-mock-cred",
+      s: "EExample-schema",
+      i: "EIssuer-aid",
+      a: {
+        i: "EHolder-aid",
+        dt: new Date().toISOString(),
+        agentId: "demo-agent-001",
+      },
+      ri: "ERegistry-said",
+    },
+    schema: {
+      $id: "EExample-schema",
+      credentialType: "AgentVerification",
+      title: "Agent Verification",
+    },
+    status: { s: "0" as const },
+  };
+  const result = validateCredential(mockCredential);
+  console.log("Validation:", result.status, "—", result.message);
+}
+
+main().catch(console.error);
+```
+
+Run it:
+
+<Tabs>
+<TabItem value="pnpm" label="pnpm">
+
+```bash
+pnpm dlx tsx try-masumi.ts
+```
+
+</TabItem>
+<TabItem value="npm" label="npm">
+
+```bash
+npx tsx try-masumi.ts
+```
+
+</TabItem>
+</Tabs>
+
+Expected output:
+
+```
+Issuer OOBI: https://cred-issuance.masumi-identity.xyz/oobi/ENd...
+Validation: issued — Credential is valid
+```
+
+## 5. Where to go next
+
+<CardGroup cols={2}>
+  <Card title="Core concepts" icon="book" href="/concepts">
+    Understand AIDs, OOBIs, ACDCs, and the A2A trust model before building real flows.
+  </Card>
+  <Card title="Link an agent to an AID" icon="link" href="/tutorials/link-agent-to-aid">
+    Full tutorial for binding a Masumi agent to a Veridian-wallet-controlled AID.
+  </Card>
+  <Card title="Verify a VC in A2A" icon="shield-check" href="/tutorials/verify-vc-a2a">
+    Prove another agent owns its claimed AID before trusting a payment or message.
+  </Card>
+  <Card title="Template agent" icon="code" href="/examples/template-agent">
+    A minimal runnable example that exercises the happy path end-to-end.
+  </Card>
+</CardGroup>
