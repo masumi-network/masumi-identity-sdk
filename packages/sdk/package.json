@@ -1,6 +1,6 @@
 {
   "name": "@masumi_network/identity-sdk",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "TypeScript SDK for Masumi Identity — link agents to DIDs, request and verify Verifiable Credentials in agent-to-agent interactions.",
   "keywords": [
     "masumi",
