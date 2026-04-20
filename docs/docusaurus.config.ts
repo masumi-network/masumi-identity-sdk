@@ -21,12 +21,12 @@ const config: Config = {
   projectName: "masumi-identity-sdk",
   trailingSlash: false,
 
-  onBrokenLinks: "warn",
-  onBrokenAnchors: "warn",
+  onBrokenLinks: "throw",
+  onBrokenAnchors: "throw",
 
   markdown: {
     hooks: {
-      onBrokenMarkdownLinks: "warn",
+      onBrokenMarkdownLinks: "throw",
     },
   },
 
