@@ -1,0 +1,119 @@
+---
+title: Template agent
+description: "A minimal runnable TypeScript project that exercises the SDK against live Masumi infrastructure."
+---
+
+The SDK repo ships with a template agent under [`examples/template-agent`](https://github.com/masumi-network/masumi-identity-sdk/tree/main/examples/template-agent). It's the smallest project that proves the SDK is wired up end-to-end — a perfect starting point for your own integration.
+
+## What it does
+
+<Steps>
+  <Step title="Instantiates the SDK">
+    Uses `MASUMI_IDENTITY_ENDPOINTS.production` by default, with env overrides.
+  </Step>
+  <Step title="Calls a live endpoint">
+    `getIssuerOobi()` is the cheapest liveness check — returns a URL if the
+    credential server is reachable.
+  </Step>
+  <Step title="Validates a mock credential">
+    Shows the pure `validateCredential` helper working on an in-memory payload
+    (no network required).
+  </Step>
+</Steps>
+
+## Run it
+
+<Tabs>
+  <Tab title="From the monorepo">
+    ```bash
+    git clone https://github.com/masumi-network/masumi-identity-sdk.git
+    cd masumi-identity-sdk
+    pnpm install
+    pnpm --filter @masumi_network/identity-sdk-template-agent start
+    ```
+  </Tab>
+  <Tab title="As a fresh project">
+    ```bash
+    mkdir my-agent && cd my-agent
+    pnpm init
+    pnpm add @masumi_network/identity-sdk
+    pnpm add -D tsx
+    # Paste the source below into src/index.ts
+    pnpm tsx src/index.ts
+    ```
+  </Tab>
+</Tabs>
+
+## Source
+
+```ts src/index.ts
+import {
+  MASUMI_IDENTITY_ENDPOINTS,
+  MasumiIdentity,
+  validateCredential,
+  VERSION,
+} from "@masumi_network/identity-sdk";
+
+const credentialServerUrl =
+  process.env.VERIDIAN_CREDENTIAL_SERVER_URL ??
+  MASUMI_IDENTITY_ENDPOINTS.production.credentialServerUrl;
+const keriaUrl =
+  process.env.VERIDIAN_KERIA_URL ??
+  MASUMI_IDENTITY_ENDPOINTS.production.keriaUrl;
+
+async function main(): Promise<void> {
+  console.log(`Masumi Identity SDK v${VERSION} — template agent`);
+  console.log(`Credential server: ${credentialServerUrl}`);
+  console.log(`KERIA:             ${keriaUrl}`);
+
+  const identity = new MasumiIdentity({ credentialServerUrl, keriaUrl });
+
+  // 1. Liveness check.
+  const issuerOobi = await identity.getIssuerOobi();
+  console.log(`Issuer OOBI: ${issuerOobi}`);
+
+  // 2. Pure validation on a mock credential.
+  const mockCredential = {
+    sad: {
+      d: "EHrP-mock-credential-said",
+      s: "EExample-schema-said",
+      i: "EIssuer-aid",
+      a: {
+        i: "EHolder-aid",
+        dt: new Date().toISOString(),
+        agentId: "demo-agent-001",
+      },
+      ri: "ERegistry-said",
+    },
+    schema: {
+      $id: "EExample-schema-said",
+      credentialType: "AgentVerification",
+      title: "Agent Verification",
+    },
+    status: { s: "0" as const },
+  };
+  const validation = validateCredential(mockCredential);
+  console.log(`Status: ${validation.status}  valid=${validation.isValid}`);
+}
+
+main().catch((error: unknown) => {
+  console.error("Template agent failed:", error);
+  process.exit(1);
+});
+```
+
+## Expected output
+
+```
+Masumi Identity SDK v0.1.0 — template agent
+Credential server: https://cred-issuance.masumi-identity.xyz
+KERIA:             https://keria.masumi-identity.xyz
+Issuer OOBI: https://cred-issuance.masumi-identity.xyz/oobi/ENd...
+Status: issued  valid=true
+```
+
+## Where to take it from here
+
+- Swap the mock credential for a real one by calling [`getCredentialsForAid`](/api-reference/credentials#getcredentialsforaid).
+- Plug in a real OOBI handshake following [Tutorial 1](/tutorials/link-agent-to-aid).
+- Add signature verification for incoming A2A messages following [Tutorial 2](/tutorials/verify-vc-a2a).

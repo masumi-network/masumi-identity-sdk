@@ -1,0 +1,104 @@
+---
+title: Core Concepts
+description: "A five-minute primer on AIDs, OOBIs, ACDCs, VCs, and the A2A model — just enough to wield the SDK confidently."
+---
+
+You can build with the Masumi Identity SDK without becoming a KERI expert — but a shared mental model of the terms makes every method obvious. Here are the five ideas that actually matter.
+
+## 1. AID — Autonomous Identifier
+
+An **AID** is a self-certifying identifier controlled by a keypair (not by a registry or a DNS record). It looks like:
+
+```
+EHpH79tPZoSl7VJZ7xMi3JWF4rH9wZ2ntGvKABd9N14z
+```
+
+The `E` prefix means it's derived from an Ed25519 public key. Because the ID *is* a cryptographic commitment to a key, you can verify "does this identifier really control this key?" without asking any central authority.
+
+In this SDK, you'll see `aid` everywhere. A Masumi agent is linked to one AID, typically controlled by a [Veridian wallet](https://github.com/masumi-network/masumi-veridian-wallet).
+
+## 2. OOBI — Out-of-Band Introduction
+
+Two parties that have never talked before need some way to bootstrap: "here is my AID, here is how you can reach me." That's an **OOBI** — a URL that, when resolved, teaches the other side enough about your AID to start communicating.
+
+Typical OOBIs look like:
+
+```
+https://keria.masumi-identity.xyz/oobi/EHpH79tPZoSl...
+https://cred-issuance.masumi-identity.xyz/oobi/ENd...
+```
+
+In the SDK:
+
+- [`getIssuerOobi()`](/api-reference/agent-linking#getissueroobi) returns the credential server's OOBI — share this with a wallet.
+- [`connectToAid(oobi)`](/api-reference/agent-linking#connecttoaid) resolves a wallet's OOBI at the credential server so it can later issue credentials to that AID.
+
+## 3. ACDC — Authentic Chained Data Container
+
+**ACDC** is the credential format KERI uses. You can think of it as "a signed JSON document whose authenticity and revocation status are anchored to KERI key-event-logs." In this SDK it's surfaced as the [`Credential`](/api-reference/types#credential) type:
+
+```ts
+interface Credential {
+  sad: {
+    d?: string;    // Credential SAID (its unique ID)
+    s: string;     // Schema SAID
+    i: string;     // Issuer AID
+    a: {
+      i: string;   // Issuee AID
+      dt: string;  // Issuance datetime
+      [key: string]: unknown; // Your custom attributes
+    };
+    ri: string;    // Credential status registry SAID
+  };
+  status: { s: "0" | "1" };  // "0" = issued, "1" = revoked
+  // ...
+}
+```
+
+You don't build these by hand — the credential server does. Your job is to:
+
+1. Ask for a credential to be issued with [`issueCredential()`](/api-reference/credentials#issuecredential).
+2. Receive it from another agent during an interaction.
+3. Validate it with [`validateCredential()`](/api-reference/credentials#validatecredential).
+
+## 4. SAID — Self-Addressing Identifier
+
+A **SAID** is a content-addressed hash that identifies a specific piece of data (a schema, a credential, a registry). You'll see SAIDs in two places:
+
+- **`schemaSaid`** — identifies the schema a credential conforms to. Issuing a credential requires picking a schema SAID.
+- **`credential.sad.d`** — the credential's own SAID. Doubles as a stable, verifiable credential ID.
+
+## 5. VC and A2A — Verifiable Credentials in Agent-to-Agent flows
+
+A **Verifiable Credential (VC)** is a claim made by an issuer about a subject that a verifier can check cryptographically. An ACDC credential issued to an AID *is* a VC.
+
+**Agent-to-Agent (A2A)** trust with this SDK looks like:
+
+<Steps>
+  <Step title="Agent A claims an identity">
+    Agent A sends its AID and a signed message to Agent B.
+  </Step>
+  <Step title="Agent B verifies the signature">
+    Agent B calls [`verifyAidSignature({ aid, message, signature })`](/api-reference/signature-verification#verifyaidsignature). The SDK fetches Agent A's current key state from KERIA and validates the Ed25519 signature. If this returns `true`, Agent B knows Agent A controls that AID *right now*.
+  </Step>
+  <Step title="Agent A presents a credential">
+    Agent A presents a VC that was issued to its AID — e.g. a Masumi "Agent Verification" credential.
+  </Step>
+  <Step title="Agent B validates the credential">
+    Agent B calls [`validateCredential(cred)`](/api-reference/credentials#validatecredential) to confirm it's issued, not revoked, and not expired. Agent B can also verify the issuer AID and schema SAID match what it expects.
+  </Step>
+</Steps>
+
+Together, steps 2 and 4 give Agent B a cryptographic answer to "is this really Masumi-verified Agent A?" without trusting any intermediary.
+
+## The SDK's three method families
+
+Everything on [`MasumiIdentity`](/api-reference/masumi-identity) falls into one of three buckets, which map 1:1 to the concepts above:
+
+| Family | Concepts | Methods |
+|--------|----------|---------|
+| **Agent ↔ AID linking** | OOBIs, AIDs | `getIssuerOobi`, `connectToAid`, `isAidConnected` |
+| **Verifiable Credentials** | ACDCs, SAIDs | `issueCredential`, `getCredentialsForAid`, `validateCredential`, `formatCredential`, `findCredentialBySchema` |
+| **Signature verification** | Key state, Ed25519 | `verifyAidSignature`, `fetchKeyState` |
+
+That's the whole picture. You're now ready for [Tutorial 1 — Link an agent to an AID](/tutorials/link-agent-to-aid).

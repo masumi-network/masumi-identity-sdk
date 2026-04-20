@@ -1,0 +1,101 @@
+---
+title: Agent ↔ AID linking
+description: "Establish the trust relationship between an agent and a KERI AID controlled by a wallet."
+---
+
+These methods cover the OOBI handshake between your agent, the Masumi credential server, and a Veridian-controlled AID.
+
+## `getIssuerOobi`
+
+Fetch the credential server's own OOBI. Share this URL with a wallet so the wallet can resolve it and learn how to reach the issuer.
+
+```ts
+getIssuerOobi(): Promise<string>
+```
+
+### Returns
+
+A resolvable OOBI URL, e.g. `https://cred-issuance.masumi-identity.xyz/oobi/ENd...`.
+
+### Example
+
+```ts
+const issuerOobi = await identity.getIssuerOobi();
+
+// Deliver to a wallet out-of-band (QR code, deep link, API response, etc.)
+console.log(issuerOobi);
+```
+
+### Throws
+
+- `Error` — if the credential server is unreachable or returns a non-2xx response.
+
+---
+
+## `connectToAid`
+
+Resolve a wallet's OOBI at the credential server. Call this once the wallet has returned its own OOBI to complete the second half of the handshake — afterwards the server knows how to reach this AID and can issue credentials to it.
+
+```ts
+connectToAid(oobi: string): Promise<{ success: boolean; data: string }>
+```
+
+### Parameters
+
+<ParamField path="oobi" type="string" required>
+  OOBI URL produced by the wallet for the AID you want to link.
+</ParamField>
+
+### Returns
+
+An object with:
+
+- `success` — `true` when resolution succeeded.
+- `data` — server-provided status / transaction identifier.
+
+### Example
+
+```ts
+const walletOobi = "https://keria.masumi-identity.xyz/oobi/EHpH79tPZoSl...";
+const result = await identity.connectToAid(walletOobi);
+
+if (!result.success) {
+  throw new Error(`OOBI resolution failed: ${result.data}`);
+}
+```
+
+---
+
+## `isAidConnected`
+
+Check whether an AID is already a known contact of the credential server. Useful for idempotency — avoid redoing the handshake for an AID that is already linked.
+
+```ts
+isAidConnected(aid: string): Promise<boolean>
+```
+
+### Parameters
+
+<ParamField path="aid" type="string" required>
+  The AID to look up, e.g. `EHpH79tPZoSl7VJZ7xMi3JWF4rH9wZ2ntGvKABd9N14z`.
+</ParamField>
+
+### Returns
+
+`true` if the credential server already has the AID as a contact, `false` otherwise.
+
+### Example
+
+```ts
+const aid = "EHpH79tPZoSl7VJZ7xMi3JWF4rH9wZ2ntGvKABd9N14z";
+
+if (!(await identity.isAidConnected(aid))) {
+  await identity.connectToAid(walletOobi);
+}
+
+// Safe to issue credentials now.
+```
+
+## Full linking flow
+
+See [Tutorial 1 — Link an agent to an AID](/tutorials/link-agent-to-aid) for the end-to-end walkthrough that uses all three methods together.

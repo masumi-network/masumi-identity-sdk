@@ -1,0 +1,195 @@
+---
+title: Types
+description: "Complete TypeScript type reference for the SDK."
+---
+
+Every interface and type exported from `@masumi_network/identity-sdk`. Everything is tree-shakeable — import only what you need.
+
+## `MasumiIdentityConfig`
+
+Config passed to the [`MasumiIdentity`](/api-reference/masumi-identity) constructor.
+
+```ts
+interface MasumiIdentityConfig {
+  credentialServerUrl: string;
+  keriaUrl: string;
+  fetch?: typeof fetch;
+}
+```
+
+<ParamField body="credentialServerUrl" type="string" required>
+  Base URL of the Masumi KERI credential server.
+</ParamField>
+<ParamField body="keriaUrl" type="string" required>
+  Base URL of the KERIA agent. Required for signature verification.
+</ParamField>
+<ParamField body="fetch" type="typeof fetch">
+  Optional `fetch` override. Defaults to global `fetch`.
+</ParamField>
+
+---
+
+## `Credential`
+
+Raw ACDC credential as returned by the credential server.
+
+```ts
+interface Credential {
+  sad: {
+    d?: string;       // Credential SAID (unique ID)
+    s: string;        // Schema SAID
+    i: string;        // Issuer AID
+    a: {
+      i: string;      // Issuee AID
+      dt: string;     // ISO 8601 issuance datetime
+      [key: string]: unknown;
+    };
+    ri: string;       // Status registry SAID
+  };
+  schema?: {
+    $id: string;
+    credentialType?: string;
+    title?: string;
+    version?: string;
+  };
+  status: {
+    s: "0" | "1";     // "0" = issued, "1" = revoked
+    et?: string;
+    dt?: string;
+  };
+  rev?: {
+    s: string;
+    dt: string;
+  };
+}
+```
+
+<Note>
+`sad` stands for *Self-Addressing Data* — the core credential payload. Its SAID
+(`sad.d`) is a cryptographic hash of its own contents.
+</Note>
+
+---
+
+## `FormattedCredential`
+
+Structured projection of a `Credential`, returned by [`formatCredential`](/api-reference/utilities#formatcredential).
+
+```ts
+interface FormattedCredential {
+  schemaSaid: string;
+  credentialType: string;
+  credentialTitle: string;
+  issueeId: string;
+  issueeAid: string;
+  issuanceDateTime: string;
+  credentialStatusRegistry: string;
+  attributes: Record<string, unknown>;
+  status: "issued" | "revoked" | "expired";
+  isValid: boolean;
+}
+```
+
+---
+
+## `CredentialValidationResult`
+
+Returned by [`validateCredential`](/api-reference/utilities#validatecredential).
+
+```ts
+interface CredentialValidationResult {
+  isValid: boolean;
+  status: "issued" | "revoked" | "expired" | "unknown";
+  message: string;
+  details?: {
+    issuedAt?: string;
+    revokedAt?: string;
+    expiresAt?: string;
+    schemaSaid?: string;
+    credentialType?: string;
+  };
+}
+```
+
+---
+
+## `CredentialValidationOptions`
+
+Options for [`validateCredential`](/api-reference/utilities#validatecredential).
+
+```ts
+interface CredentialValidationOptions {
+  expirationDays?: number; // default: 365
+}
+```
+
+---
+
+## `IssueCredentialParams`
+
+Parameters for [`MasumiIdentity.issueCredential`](/api-reference/credentials#issuecredential).
+
+```ts
+interface IssueCredentialParams {
+  schemaSaid: string;
+  aid: string;
+  attributes?: Record<string, unknown>;
+}
+```
+
+---
+
+## `VerifyAidSignatureParams`
+
+Parameters for [`MasumiIdentity.verifyAidSignature`](/api-reference/signature-verification#verifyaidsignature).
+
+```ts
+interface VerifyAidSignatureParams {
+  aid: string;
+  message: string;
+  signature: string; // base64url Ed25519 signature
+}
+```
+
+---
+
+## `AidKeyState`
+
+Returned by [`MasumiIdentity.fetchKeyState`](/api-reference/signature-verification#fetchkeystate).
+
+```ts
+interface AidKeyState {
+  k: string; // current active public key (base64url Ed25519)
+  [key: string]: unknown;
+}
+```
+
+---
+
+## `MasumiIdentityEnvironment`
+
+Keys of [`MASUMI_IDENTITY_ENDPOINTS`](/api-reference/constants).
+
+```ts
+type MasumiIdentityEnvironment = "production";
+```
+
+---
+
+## Type imports
+
+Every type above is exported from the root entry:
+
+```ts
+import type {
+  AidKeyState,
+  Credential,
+  CredentialValidationOptions,
+  CredentialValidationResult,
+  FormattedCredential,
+  IssueCredentialParams,
+  MasumiIdentityConfig,
+  MasumiIdentityEnvironment,
+  VerifyAidSignatureParams,
+} from "@masumi_network/identity-sdk";
+```

@@ -1,0 +1,133 @@
+---
+title: Troubleshooting
+description: "Common integration issues and how to fix them."
+---
+
+## Installation & runtime
+
+### `ReferenceError: fetch is not defined`
+
+You're on Node.js 17 or older. The SDK uses the global `fetch`, which Node added in 18. Either upgrade Node (recommended) or polyfill:
+
+```ts
+import { MasumiIdentity } from "@masumi_network/identity-sdk";
+import fetchPonyfill from "node-fetch";
+
+const identity = new MasumiIdentity({
+  credentialServerUrl: "...",
+  keriaUrl: "...",
+  fetch: fetchPonyfill as unknown as typeof fetch,
+});
+```
+
+### ESM / CJS interop errors
+
+The SDK ships both ESM and CJS builds. If your bundler gets confused, force the right one in your `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler"
+  }
+}
+```
+
+### `"@masumi_network/identity-sdk" not found`
+
+Note the **underscore**, not a hyphen. The npm org is `masumi_network`, so the package name is `@masumi_network/identity-sdk`. Confirm with:
+
+```bash
+npm view @masumi_network/identity-sdk version
+```
+
+---
+
+## Agent linking
+
+### `connectToAid` returns `success: false`
+
+The credential server rejected the OOBI. Check:
+
+1. The OOBI is a complete URL, not just an AID.
+2. The wallet that produced the OOBI is reachable on the public internet — the credential server has to be able to fetch it.
+3. The AID isn't malformed — KERI AIDs start with `E` and are 44 characters of base64url.
+
+### `isAidConnected(aid)` returns `false` after `connectToAid` succeeded
+
+Propagation is usually instant but occasionally takes a moment. Retry once after a short delay, or treat a single false negative as benign and re-run `connectToAid` — it's idempotent.
+
+---
+
+## Credentials
+
+### `issueCredential` throws "AID not found"
+
+You skipped the linking step. Every AID receiving a credential must be connected via [`connectToAid`](/api-reference/agent-linking#connecttoaid) first:
+
+```ts
+if (!(await identity.isAidConnected(aid))) {
+  await identity.connectToAid(walletOobi);
+}
+await identity.issueCredential({ schemaSaid, aid, attributes });
+```
+
+### `validateCredential` returns `status: "expired"` unexpectedly
+
+Expiration defaults to 365 days from issuance. Override if your credentials are shorter-lived or effectively eternal:
+
+```ts
+identity.validateCredential(cred, { expirationDays: 90 });        // short
+identity.validateCredential(cred, { expirationDays: 365 * 100 }); // effectively off
+```
+
+### `validateCredential` returns `status: "unknown"`
+
+The `status` field on the raw credential is missing or malformed. Either the credential came from a non-KERI source or it was manually constructed and skipped the `status.s` field. Re-fetch from the credential server.
+
+---
+
+## Signature verification
+
+### `verifyAidSignature` returns `false` even though the signature looks right
+
+Three usual causes:
+
+1. **Wrong encoding.** The signature must be **base64url**, not base64. Convert if needed.
+2. **Message mismatch.** The signed message must be byte-identical to what was signed — no trailing newline, no JSON re-serialization.
+3. **Keys have rotated.** The AID may have rotated keys since the signature was produced. KERI verifies against *current* key state; historical signatures over historical keys require log replay, which this SDK does not do.
+
+### `fetchKeyState` throws `404`
+
+The AID is not resolvable at the configured KERIA. Either:
+
+- The AID's wallet has never published its key state to this KERIA.
+- The AID is from a different KERI network — make sure `keriaUrl` points at the right cluster.
+
+### `verifyAidSignature` calls are slow under load
+
+Every call hits KERIA. For bursts, cache the key state yourself and verify in-process:
+
+```ts
+const keyState = await identity.fetchKeyState(aid); // cache with TTL
+// … verify subsequent signatures against keyState.k locally.
+```
+
+---
+
+## Configuration
+
+### How do I point at staging / a self-hosted deployment?
+
+Override both URLs in the constructor. See [Constants](/api-reference/constants) for the recommended env-var pattern.
+
+### Do I really need `keriaUrl` if I'm only issuing credentials?
+
+Technically no — `issueCredential`, `connectToAid`, `getIssuerOobi`, `isAidConnected`, and `getCredentialsForAid` only touch the credential server. But the constructor still expects a string. Pass the production URL or a sentinel like `https://unset.invalid`; KERIA methods will fail noisily if anyone ever calls them without real config.
+
+---
+
+## Still stuck?
+
+- Open an issue on [GitHub](https://github.com/masumi-network/masumi-identity-sdk/issues) — include the SDK version (`VERSION` export) and the full error.
+- Ping the Masumi team at [masumi.network](https://masumi.network).
