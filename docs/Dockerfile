@@ -1,5 +1,7 @@
 # Mirrors masumi-network/masumi-docs Dockerfile so ops knowledge transfers 1:1.
 # Multi-stage Node 20 Alpine build → Next.js `output: 'standalone'` runtime.
+#
+# App Platform expects linux/amd64. On Apple Silicon: docker build --platform linux/amd64 …
 
 FROM node:20-alpine AS base
 

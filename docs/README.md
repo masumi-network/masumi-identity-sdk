@@ -7,7 +7,8 @@ via a Docker container image (mirrors the
 [`masumi-docs`](https://github.com/masumi-network/masumi-docs) deploy pipeline
 so ops knowledge transfers 1:1).
 
-**Live:** https://sdk-docs.masumi.network
+**Live:** https://masumi-identity-sdk-docs-8lhm9.ondigitalocean.app  
+**Custom domain (optional):** `sdk-docs.masumi.network` — add in App Platform + DNS when ready, then update `lib/shared.ts` and npm `homepage`.
 
 ---
 
@@ -102,18 +103,27 @@ Required secrets on the `masumi-network/masumi-identity-sdk` repo:
      `masumi-identity-sdk-docs-staging:latest` (staging)
    - **Auto-deploy:** enabled
    - **HTTP port:** 3000
-3. Point `sdk-docs.masumi.network` (or whichever domain you pick) at the
-   prod App Platform app via DNS + DO's domain UI.
-4. Update `lib/shared.ts::appUrl`, `packages/sdk/package.json::homepage`,
-   and the root `README.md` to match the final domain.
+3. Point `sdk-docs.masumi.network` (optional) at the prod app in DO **Domains**.
+4. Keep `lib/shared.ts::appUrl`, `packages/sdk/package.json::homepage`, and
+   root `README.md` aligned with the public URL users should open.
 
 ### Build locally via Docker
 
+On **Apple Silicon**, build for App Platform with `--platform linux/amd64`:
+
 ```bash
 cd docs
-docker build -t masumi-identity-sdk-docs .
-docker run --rm -p 3000:3000 masumi-identity-sdk-docs
+docker build --platform linux/amd64 -t masumi-identity-sdk-docs:local .
+docker run --rm -p 3000:3000 masumi-identity-sdk-docs:local
 # open http://localhost:3000
+```
+
+To push to DOCR manually (same tag CI uses):
+
+```bash
+docker tag masumi-identity-sdk-docs:local registry.digitalocean.com/<DO_REGISTRY_NAME>/masumi-identity-sdk-docs:latest
+doctl registry login --expiry-seconds 1200
+docker push registry.digitalocean.com/<DO_REGISTRY_NAME>/masumi-identity-sdk-docs:latest
 ```
 
 ### PR builds
