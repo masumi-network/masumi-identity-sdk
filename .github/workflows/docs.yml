@@ -1,5 +1,10 @@
 name: Docs
 
+# Deployment is handled by Vercel (configured via the Vercel dashboard, with
+# the project root set to `docs/`). This workflow only validates that the
+# Fumadocs build still compiles on PRs and pushes to main, independent of
+# Vercel, so a docs regression never slips in unnoticed.
+
 on:
   push:
     branches: [main]
@@ -37,30 +42,3 @@ jobs:
 
       - name: Build site
         run: npm run build
-
-      - name: Upload Pages artifact
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: docs/build
-
-  deploy:
-    name: Deploy to GitHub Pages
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    needs: build
-    runs-on: ubuntu-latest
-    # Serialize only real deploys; PR builds run independently and never
-    # queue behind (or cancel) a production deployment.
-    concurrency:
-      group: pages-deploy
-      cancel-in-progress: false
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
