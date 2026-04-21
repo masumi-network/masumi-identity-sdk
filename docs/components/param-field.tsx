@@ -4,6 +4,10 @@ import { cn } from "@/lib/cn";
 /**
  * Mintlify-style `<ParamField>` for documenting function / method parameters.
  *
+ * Accepts any of Mintlify's three label conventions — `name`, `path`, or
+ * `body` — so MDX authored against the Mintlify ParamField spec renders
+ * correctly without rewriting every call site.
+ *
  * Usage:
  *   <ParamField name="endpoints" type="MasumiIdentityEndpoints" required>
  *     Credential-server + KERIA URLs.
@@ -12,6 +16,9 @@ import { cn } from "@/lib/cn";
 export function ParamField({
   name,
   path,
+  body,
+  query,
+  header,
   type,
   required,
   default: defaultValue,
@@ -20,13 +27,16 @@ export function ParamField({
 }: {
   name?: string;
   path?: string;
+  body?: string;
+  query?: string;
+  header?: string;
   type?: string;
   required?: boolean;
   default?: string;
   children: ReactNode;
   className?: string;
 }) {
-  const label = name ?? path ?? "";
+  const label = name ?? path ?? body ?? query ?? header ?? "";
   return (
     <div
       className={cn(
