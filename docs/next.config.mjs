@@ -21,8 +21,13 @@ const config = {
   compress: true,
   async headers() {
     return [
-      // Specific sources first — Next applies the first matching rule; a leading `/:path*`
-      // catch-all would otherwise force no-store on everything below.
+      // Next.js: if several rules match the same path and set the same header key, the
+      // LAST one wins. Put the `/:path*` default first, then more specific paths so their
+      // Cache-Control overrides no-store for static assets, API, and llms.txt.
+      {
+        source: '/:path*',
+        headers: [{ key: 'Cache-Control', value: 'no-store' }],
+      },
       {
         source: '/_next/static/:path*',
         headers: [
@@ -46,11 +51,6 @@ const config = {
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=3600, s-maxage=86400' },
         ],
-      },
-      {
-        // Dynamic HTML — don't let any CDN cache streamed HTML (ISR handles freshness itself).
-        source: '/:path*',
-        headers: [{ key: 'Cache-Control', value: 'no-store' }],
       },
     ];
   },
