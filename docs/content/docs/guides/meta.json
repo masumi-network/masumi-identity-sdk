@@ -1,0 +1,13 @@
+{
+  "title": "Guides",
+  "icon": "BookOpen",
+  "root": true,
+  "pages": [
+    "index",
+    "---Tutorials---",
+    "tutorials/link-agent-to-aid",
+    "tutorials/verify-vc-a2a",
+    "---Examples---",
+    "examples/template-agent"
+  ]
+}

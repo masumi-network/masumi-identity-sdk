@@ -15,7 +15,7 @@
   ],
   "license": "MIT",
   "author": "Masumi Network",
-  "homepage": "https://masumi-network.github.io/masumi-identity-sdk/",
+  "homepage": "https://masumi-identity-sdk.vercel.app",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/masumi-network/masumi-identity-sdk.git",

@@ -1,0 +1,73 @@
+---
+title: Constants
+description: "Canonical Masumi endpoints shipped with the SDK."
+---
+
+The SDK ships with the canonical production URLs for the Masumi identity infrastructure so you don't have to remember or hard-code them.
+
+## `MASUMI_IDENTITY_ENDPOINTS`
+
+```ts
+const MASUMI_IDENTITY_ENDPOINTS = {
+  production: {
+    credentialServerUrl: "https://cred-issuance.masumi-identity.xyz",
+    keriaUrl: "https://keria.masumi-identity.xyz",
+  },
+} as const;
+```
+
+### Import
+
+```ts
+import { MASUMI_IDENTITY_ENDPOINTS } from "@masumi_network/identity-sdk";
+```
+
+### Recommended patterns
+
+<Tabs items={['Production (simplest)','Env override with fallback']}>
+<Tab value="Production (simplest)">
+
+```ts
+import {
+  MasumiIdentity,
+  MASUMI_IDENTITY_ENDPOINTS,
+} from "@masumi_network/identity-sdk";
+
+const identity = new MasumiIdentity(MASUMI_IDENTITY_ENDPOINTS.production);
+```
+
+</Tab>
+<Tab value="Env override with fallback">
+
+```ts
+import {
+  MasumiIdentity,
+  MASUMI_IDENTITY_ENDPOINTS,
+} from "@masumi_network/identity-sdk";
+
+const identity = new MasumiIdentity({
+  credentialServerUrl:
+    process.env.MASUMI_CRED_URL ??
+    MASUMI_IDENTITY_ENDPOINTS.production.credentialServerUrl,
+  keriaUrl:
+    process.env.MASUMI_KERIA_URL ??
+    MASUMI_IDENTITY_ENDPOINTS.production.keriaUrl,
+});
+```
+
+</Tab>
+</Tabs>
+
+<Callout type="info">
+These URLs are versioned alongside the SDK. If the network moves, a new SDK release ships with updated URLs — consumers get the fix on upgrade. Prefer reading from this constant over hard-coding the URLs in your own code.
+</Callout>
+
+## `VERSION`
+
+The current SDK version as a string constant. Useful for diagnostic logs.
+
+```ts
+import { VERSION } from "@masumi_network/identity-sdk";
+
+console.log(`Using Masumi Identity SDK v${VERSION}`);
+```

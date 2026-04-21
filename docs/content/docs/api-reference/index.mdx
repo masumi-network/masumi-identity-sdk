@@ -1,0 +1,42 @@
+---
+title: API Reference
+description: Every export of @masumi_network/identity-sdk — methods, parameters, return types, and examples.
+---
+
+Complete reference for the SDK. The client surface is one class (`MasumiIdentity`) plus a small set of pure utility functions and constants.
+
+## Client
+
+<Cards>
+  <Card title="MasumiIdentity" href="/api-reference/masumi-identity">
+    The single entry-point class. Constructor, configuration, and the full instance-method index.
+  </Card>
+</Cards>
+
+## Method groups
+
+<Cards>
+  <Card title="Agent ↔ AID linking" href="/api-reference/agent-linking">
+    Establish the trust relationship between an agent and a KERI AID controlled by a wallet.
+  </Card>
+  <Card title="Verifiable Credentials" href="/api-reference/credentials">
+    Issue, fetch, validate, and format ACDC credentials.
+  </Card>
+  <Card title="Signature verification" href="/api-reference/signature-verification">
+    Prove an AID owns the signature it claims during A2A interactions.
+  </Card>
+</Cards>
+
+## Pure helpers
+
+<Cards>
+  <Card title="Utilities" href="/api-reference/utilities">
+    Standalone validation, formatting, and lookup functions — no network calls.
+  </Card>
+  <Card title="Constants" href="/api-reference/constants">
+    Canonical Masumi endpoints and SDK version metadata.
+  </Card>
+  <Card title="Types" href="/api-reference/types">
+    Every TypeScript type exported by the SDK, indexed and cross-linked.
+  </Card>
+</Cards>

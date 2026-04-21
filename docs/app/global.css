@@ -1,0 +1,62 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+
+/**
+ * Masumi brand tokens — mirrored from masumi-saas globals.css.
+ * Override Fumadocs' `--color-fd-primary` ramp to match the brand.
+ *
+ * Light mode uses electric-pink (#fa008c) for AA contrast on white.
+ * Dark mode uses iris-flower (#ff51ff) which pops on #0a0a0a without contrast issues.
+ */
+:root {
+  --masumi-black: #000000;
+  --masumi-crimson-purple: #460a23;
+  --masumi-electric-pink: #fa008c;
+  --masumi-iris-flower: #ff51ff;
+  --masumi-vivid-sakura: #ff6ed2;
+  --masumi-peach-blossom: #ffc8f0;
+  --masumi-scarlet: #fa140a;
+  --masumi-persimmon: #ff6400;
+  --masumi-golden-yellow: #ffd300;
+
+  --color-fd-primary: var(--masumi-electric-pink);
+  --color-fd-ring: var(--masumi-electric-pink);
+}
+
+.dark {
+  --color-fd-primary: var(--masumi-iris-flower);
+  --color-fd-ring: var(--masumi-iris-flower);
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+html > body[data-scroll-locked] {
+  margin-right: 0px !important;
+  --removed-body-scroll-bar-size: 0px !important;
+}
+
+/* Subtle crimson-purple navbar gradient, matches masumi-saas --gradient-masumi-header */
+#nd-nav {
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--masumi-crimson-purple) 5%, transparent),
+    transparent
+  );
+}
+
+.dark #nd-nav {
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--masumi-crimson-purple) 25%, transparent),
+    transparent
+  );
+}
+
+/* Round mark should stay circular regardless of container */
+#nd-nav img[alt="Masumi"],
+#nd-nav img[alt="Masumi Identity SDK"] {
+  border-radius: 50%;
+}

@@ -1,0 +1,15 @@
+{
+  "title": "API Reference",
+  "icon": "Code",
+  "root": true,
+  "pages": [
+    "index",
+    "masumi-identity",
+    "agent-linking",
+    "credentials",
+    "signature-verification",
+    "utilities",
+    "constants",
+    "types"
+  ]
+}
