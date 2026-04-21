@@ -1,7 +1,9 @@
 export const appName = 'Masumi Identity SDK';
 export const appDescription =
   'TypeScript SDK for decentralized agent identity on Masumi — KERI AIDs, Verifiable Credentials, and A2A verification.';
-export const appUrl = 'https://masumi-identity-sdk.vercel.app';
+// Update to the final DigitalOcean App Platform URL (or custom domain, e.g.
+// `https://sdk-docs.masumi.network`) once the DO app is provisioned.
+export const appUrl = 'https://sdk-docs.masumi.network';
 
 // Docs are mounted at the root in the notebook layout.
 export const docsRoute = '/';

@@ -1,0 +1,76 @@
+name: Build and Deploy docs to DigitalOcean
+
+# Mirrors the masumi-network/masumi-docs deploy workflow: build the Next.js
+# app, bake a Docker image, push to DO Container Registry. DO App Platform
+# watches the registry and auto-redeploys on the `:latest` tag.
+#
+# Required repo secrets:
+#   DIGITALOCEAN_ACCESS_TOKEN  — DO API token with registry write access
+#   DO_REGISTRY_NAME           — e.g. "masumi-network"
+#   DO_APP_ID_PROD             — App Platform app ID for the prod docs app
+#   DO_APP_ID_TEST             — App Platform app ID for the staging docs app
+#                                (optional; only used on the staging branch)
+
+on:
+  push:
+    branches:
+      - main
+      - feat/digitalocean-deploy
+    paths:
+      - "docs/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  build-and-deploy:
+    name: Build & push image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: docs
+
+    env:
+      REGISTRY: registry.digitalocean.com
+      APP_ID: ${{ github.ref == 'refs/heads/main' && secrets.DO_APP_ID_PROD || secrets.DO_APP_ID_TEST }}
+      IMAGE_NAME: ${{ secrets.DO_REGISTRY_NAME }}/${{ github.ref == 'refs/heads/main' && 'masumi-identity-sdk-docs' || 'masumi-identity-sdk-docs-staging' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Clean previous build artifacts
+        run: rm -rf .source .contentlayer .content-collections .next
+
+      - name: Build Next.js app (validation pass)
+        run: npm run build
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Log in to DigitalOcean Container Registry
+        run: doctl registry login --expiry-seconds 1200
+
+      - name: Build and push Docker image
+        run: |
+          docker build \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            .
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest

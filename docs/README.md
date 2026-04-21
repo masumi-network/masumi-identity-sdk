@@ -2,9 +2,12 @@
 
 Public documentation for `@masumi_network/identity-sdk`, built with
 [Fumadocs](https://fumadocs.dev) (Next.js 16 + MDX + Tailwind v4) and deployed
-to [Vercel](https://vercel.com).
+to [DigitalOcean App Platform](https://www.digitalocean.com/products/app-platform)
+via a Docker container image (mirrors the
+[`masumi-docs`](https://github.com/masumi-network/masumi-docs) deploy pipeline
+so ops knowledge transfers 1:1).
 
-**Live:** https://masumi-identity-sdk.vercel.app
+**Live:** https://sdk-docs.masumi.network
 
 ---
 
@@ -53,6 +56,8 @@ docs/
 │   └── rewrite-links.mjs       one-shot internal link rewriter (notebook layout)
 ├── public/brand/            Masumi logo assets
 ├── app/global.css           Tailwind v4 + Masumi brand tokens
+├── Dockerfile               multi-stage node:20-alpine image for DO App Platform
+├── .dockerignore
 └── source.config.ts         fumadocs-mdx configuration
 ```
 
@@ -63,17 +68,59 @@ docs/
 
 That's it — the tab shows up in the navbar automatically.
 
-## Deployment (Vercel)
+## Deployment (DigitalOcean App Platform)
 
-The Vercel project's **Root Directory** is set to `docs/`. Build/install
-commands are declared in [`vercel.json`](./vercel.json):
+Same pattern as [`masumi-docs`](https://github.com/masumi-network/masumi-docs):
 
-- Install: `npm install`
-- Build: `npm run build`
+1. GitHub Actions builds the Next.js app and a Docker image from
+   [`Dockerfile`](./Dockerfile) (multi-stage, `output: 'standalone'`, non-root
+   `nextjs:nodejs` user).
+2. The image is pushed to the Masumi DigitalOcean Container Registry under
+   `registry.digitalocean.com/<DO_REGISTRY_NAME>/masumi-identity-sdk-docs`.
+3. DigitalOcean App Platform watches the registry and auto-redeploys the
+   `:latest` tag.
 
-Every push to `main` auto-deploys to production; every PR gets a preview URL.
-The [`.github/workflows/docs.yml`](../.github/workflows/docs.yml) workflow runs
-a parallel build on PRs so regressions fail CI independently of Vercel.
+Workflow: [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml).
+
+### One-time setup (repo secrets)
+
+Required secrets on the `masumi-network/masumi-identity-sdk` repo:
+
+| Secret | Purpose |
+|---|---|
+| `DIGITALOCEAN_ACCESS_TOKEN` | DO API token with registry-write access |
+| `DO_REGISTRY_NAME` | DO Container Registry name (e.g. `masumi-network`) |
+| `DO_APP_ID_PROD` | App Platform app ID for the prod docs app |
+| `DO_APP_ID_TEST` | App Platform app ID for the staging docs app (optional) |
+
+### One-time setup (DigitalOcean)
+
+1. Create a DO Container Registry (if the Masumi team doesn't already have one).
+2. Create two App Platform apps (prod + staging), each configured as:
+   - **Source:** DO Container Registry
+   - **Image:** `<registry>/masumi-identity-sdk-docs:latest` (prod) or
+     `masumi-identity-sdk-docs-staging:latest` (staging)
+   - **Auto-deploy:** enabled
+   - **HTTP port:** 3000
+3. Point `sdk-docs.masumi.network` (or whichever domain you pick) at the
+   prod App Platform app via DNS + DO's domain UI.
+4. Update `lib/shared.ts::appUrl`, `packages/sdk/package.json::homepage`,
+   and the root `README.md` to match the final domain.
+
+### Build locally via Docker
+
+```bash
+cd docs
+docker build -t masumi-identity-sdk-docs .
+docker run --rm -p 3000:3000 masumi-identity-sdk-docs
+# open http://localhost:3000
+```
+
+### PR builds
+
+[`.github/workflows/docs.yml`](../.github/workflows/docs.yml) runs a
+Node-only build on every PR (no Docker, no registry push) so regressions
+fail CI fast before the deploy pipeline ever runs.
 
 ## Branding
 
