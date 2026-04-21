@@ -21,13 +21,16 @@ const config = {
   compress: true,
   async headers() {
     return [
+      // Specific sources first — Next applies the first matching rule; a leading `/:path*`
+      // catch-all would otherwise force no-store on everything below.
       {
-        // Dynamic HTML — don't let any CDN cache streamed HTML (ISR handles freshness itself).
-        source: '/:path*',
-        headers: [{ key: 'Cache-Control', value: 'no-store' }],
+        source: '/_next/static/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+        ],
       },
       {
-        source: '/assets/:path*',
+        source: '/brand/:path*',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
@@ -43,6 +46,11 @@ const config = {
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=3600, s-maxage=86400' },
         ],
+      },
+      {
+        // Dynamic HTML — don't let any CDN cache streamed HTML (ISR handles freshness itself).
+        source: '/:path*',
+        headers: [{ key: 'Cache-Control', value: 'no-store' }],
       },
     ];
   },
