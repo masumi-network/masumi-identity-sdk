@@ -1,21 +1,27 @@
 name: Build and Deploy docs to DigitalOcean
 
 # Mirrors the masumi-network/masumi-docs deploy workflow: build the Next.js
-# app, bake a Docker image, push to DO Container Registry. DO App Platform
-# watches the registry and auto-redeploys on the `:latest` tag.
+# app, bake a Docker image, push to DO Container Registry, then explicitly
+# trigger a DO App Platform deployment. Explicit is better than relying on
+# DO's "auto-deploy on registry push" behaviour — it always runs, produces
+# clear logs, and fails the CI run if the deployment itself fails.
+#
+# Triggers:
+#   - push to `main`         → prod image + DO_APP_ID_PROD deployment
+#   - workflow_dispatch (UI) → staging image + DO_APP_ID_TEST deployment
+#                              (ref is the branch chosen in the "Run workflow" picker)
 #
 # Required repo secrets:
-#   DIGITALOCEAN_ACCESS_TOKEN  — DO API token with registry write access
-#   DO_REGISTRY_NAME           — e.g. "masumi-network"
-#   DO_APP_ID_PROD             — App Platform app ID for the prod docs app
-#   DO_APP_ID_TEST             — App Platform app ID for the staging docs app
-#                                (optional; only used on the staging branch)
+#   DIGITALOCEAN_ACCESS_TOKEN  DO API token with registry write + apps.update
+#   DO_REGISTRY_NAME           e.g. "masumi-network"
+#   DO_APP_ID_PROD             App Platform app ID for the prod docs app
+#   DO_APP_ID_TEST             App Platform app ID for the staging docs app
+#                              (only required if you trigger via workflow_dispatch)
 
 on:
   push:
     branches:
       - main
-      - feat/digitalocean-deploy
     paths:
       - "docs/**"
       - ".github/workflows/deploy.yml"
@@ -25,7 +31,7 @@ permissions: {}
 
 jobs:
   build-and-deploy:
-    name: Build & push image
+    name: Build, push, and deploy
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -74,3 +80,11 @@ jobs:
             .
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Trigger DO App Platform deployment
+        # `doctl apps create-deployment` re-deploys using the app's existing
+        # spec, which pulls the freshly-pushed `:latest` image from the
+        # registry. `--wait` blocks so the CI run fails loudly if the
+        # deploy itself fails.
+        working-directory: .
+        run: doctl apps create-deployment "${{ env.APP_ID }}" --wait
