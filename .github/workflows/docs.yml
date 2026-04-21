@@ -1,16 +1,10 @@
-name: Docs
+name: Docs (PR build check)
 
-# Deployment is handled by Vercel (configured via the Vercel dashboard, with
-# the project root set to `docs/`). This workflow only validates that the
-# Fumadocs build still compiles on PRs and pushes to main, independent of
-# Vercel, so a docs regression never slips in unnoticed.
+# PR-only build validation. Pushes to `main` are deployed by
+# `deploy.yml` (DigitalOcean), which also runs `npm run build`, so we
+# intentionally skip this workflow on push to avoid duplicate builds.
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "docs/**"
-      - ".github/workflows/docs.yml"
   pull_request:
     paths:
       - "docs/**"
