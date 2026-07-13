@@ -27,7 +27,7 @@ Content lives in [`content/docs`](./content/docs). Fumadocs picks it up through
 
 ## Layout
 
-Notebook layout (à la [docs.masumi.network](https://docs.masumi.network)) — docs
+Notebook layout (à la the [Masumi DevHub](https://www.masumi.network/dev/masumi)) — docs
 mounted at the root with three top-nav tabs.
 
 ```
