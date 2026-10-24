@@ -1,9 +1,9 @@
 # Mirrors masumi-network/masumi-docs Dockerfile so ops knowledge transfers 1:1.
-# Multi-stage Node 20 Alpine build → Next.js `output: 'standalone'` runtime.
+# Multi-stage Node 22 Alpine build to Next.js `output: 'standalone'` runtime.
 #
 # App Platform expects linux/amd64. On Apple Silicon: docker build --platform linux/amd64 …
 
-FROM node:20-alpine AS base
+FROM node:22.23.4-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914 AS base
 
 # --- deps layer: only package + config files, so it caches on lockfile hits ---
 # We pass --ignore-scripts because the postinstall runs `fumadocs-mdx` which
